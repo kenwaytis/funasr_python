@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  funasr:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: paidax/funasr:0.2.1
+    runtime: nvidia
+    ports:
+      - 9527:9527
+    command: uvicorn main:app --port 9527 --host 0.0.0.0
