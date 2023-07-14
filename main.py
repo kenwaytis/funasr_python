@@ -118,6 +118,10 @@ async def predict(items: Audio):
     decoded_data = convert_audio_to_wav(decoded_data)
     load_model(model_type=items.model_type, hotword=items.hotword)
     rec_result = loaded_model["model"](audio_in=decoded_data)
+    if items.model_type=='normal' or items.model_type=='long':
+        rec_result = {
+            "text": rec_result["text"]
+        }
     log.info(rec_result)
     return rec_result
 

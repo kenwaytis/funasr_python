@@ -4,7 +4,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    image: paidax/funasr_python:0.2.3
+    image: paidax/funasr_python:0.3
     runtime: nvidia
     ports:
       - 9527:9527
