@@ -72,28 +72,6 @@ def load_model(model_type, hotword):
     if loaded_model["model_type"] is None or loaded_model["model_type"] != model_type or (loaded_model["model_type"] == "hotword" and hotword_parm["hotword"] != hotword):
         loaded_model["model"] = initialize_model(model_type, hotword)
 
-def convert_audio_to_wav(binary_data):
-    byte_stream = io.BytesIO(binary_data)
-    formats = ['mp3', 'wav', 'ogg', 'flv', 'mp4', 'aac']
-    audio = None
-    for format in formats:
-        byte_stream.seek(0)  # reset byte stream position
-        try:
-            audio = AudioSegment.from_file(byte_stream, format=format)
-            break
-        except:
-            pass
-    if audio is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-    if audio.channels > 1:
-        audio = audio.set_channels(1)
-    audio = audio.set_frame_rate(16000)
-    buffer = io.BytesIO()
-    audio.export(buffer, format='wav')
-    binary_data_resampled = buffer.getvalue()
-
-    return binary_data_resampled
-
 
 @app.post("/asr", tags=["ASR"], summary="聚合ASR模型接口服务")
 async def predict(items: Audio):
@@ -115,7 +93,6 @@ async def predict(items: Audio):
         log.info(f"Received a url in string, url: {items.file}")
         decoded_data = requests.get(items.file).content
 
-    decoded_data = convert_audio_to_wav(decoded_data)
     load_model(model_type=items.model_type, hotword=items.hotword)
     rec_result = loaded_model["model"](audio_in=decoded_data)
     if items.model_type=='normal' or items.model_type=='long':
