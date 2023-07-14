@@ -5,6 +5,7 @@ RUN pip install --no-cache-dir \
     loguru \
     pydub \
     fastapi \
+    uvicorn \
     pydantic==1.10.8 && \
     rm -rf /root/.cache/pip/*
 
