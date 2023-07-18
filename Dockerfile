@@ -11,3 +11,5 @@ RUN pip install --no-cache-dir \
 
 COPY . .
 
+RUN python download_model.py 
+
