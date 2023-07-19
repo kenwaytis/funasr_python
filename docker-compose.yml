@@ -4,8 +4,10 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    image: paidax/funasr_python:0.3.2
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+    image: paidax/funasr_python:0.4.2
     runtime: nvidia
     ports:
       - 9527:9527
-    command: uvicorn main:app --port 9527 --host 0.0.0.0
+    command: tail -f /dev/null

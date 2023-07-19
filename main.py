@@ -35,10 +35,11 @@ def initialize_model(model_type, hotword):
         loaded_model["model_type"] = "normal"
         model = pipeline(
             task=Tasks.auto_speech_recognition,
-            vad_model="damo/speech_fsmn_vad_zh-cn-16k-common-pytorch",
             model="damo/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
+            vad_model="damo/speech_fsmn_vad_zh-cn-16k-common-pytorch",
             # lm_model='damo/speech_transformer_lm_zh-cn-common-vocab8404-pytorch',
-            punc_model="damo/punc_ct-transformer_zh-cn-common-vocab272727-pytorch"
+            punc_model="damo/punc_ct-transformer_zh-cn-common-vocab272727-pytorch",
+            timestamp_model="damo/speech_timestamp_prediction-v1-16k-offline"
         )
     elif model_type == "long":
         log.debug("lodding model: long")
@@ -72,6 +73,10 @@ def load_model(model_type, hotword):
     if loaded_model["model_type"] is None or loaded_model["model_type"] != model_type or (loaded_model["model_type"] == "hotword" and hotword_parm["hotword"] != hotword):
         loaded_model["model"] = initialize_model(model_type, hotword)
 
+@app.on_event("startup")
+async def startup_event():
+    load_model(model_type="long", hotword=None)
+    rec_result = loaded_model["model"](audio_in="./16000_001.wav")
 
 @app.post("/asr", tags=["ASR"], summary="聚合ASR模型接口服务")
 async def predict(items: Audio):
@@ -93,14 +98,20 @@ async def predict(items: Audio):
         log.info(f"Received a url in string, url: {items.file}")
         decoded_data = requests.get(items.file).content
 
-    load_model(model_type=items.model_type, hotword=items.hotword)
+    load_model(model_type="long", hotword=items.hotword)
     rec_result = loaded_model["model"](audio_in=decoded_data)
-    if items.model_type=='normal' or items.model_type=='long':
-        rec_result = {
-            "text": rec_result["text"]
-        }
+    result = []
     log.info(rec_result)
-    return rec_result
+    for sentence in rec_result["sentences"]:
+        result.append(
+            {
+                "text": sentence["text"],
+                "start": sentence["start"] / 1000.0,
+                "end": sentence["end"] / 1000.0
+            }
+        )
+    log.info(result)
+    return result
 
 @app.get("/health")
 async def health_check():

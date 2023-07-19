@@ -1,5 +1,10 @@
-FROM registry.cn-hangzhou.aliyuncs.com/modelscope-repo/modelscope:ubuntu20.04-cuda11.3.0-py37-torch1.11.0-tf1.15.5-1.6.0
-WORKDIR /modelscope/pytorch
+FROM paidax/dev-containers:modelscope-v0.6
+
+ARG HTTP_PROXY
+ENV HTTP_PROXY=${HTTP_PROXY}
+ENV HTTPS_PROXY=${HTTP_PROXY}
+
+WORKDIR /home/funasr
 
 RUN pip install --no-cache-dir \
     loguru \
@@ -11,5 +16,9 @@ RUN pip install --no-cache-dir \
 
 COPY . .
 
-RUN python download_model.py 
+RUN python download_model.py && \
+    git clone https://github.com/alibaba/FunASR.git && \
+    cd FunASR && \
+    pip install -e ./
 
+WORKDIR /home/funasr
