@@ -22,3 +22,6 @@ RUN python download_model.py && \
     pip install -e ./
 
 WORKDIR /home/funasr
+
+ENV HTTP_PROXY=""
+ENV HTTPS_PROXY=""

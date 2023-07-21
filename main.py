@@ -99,17 +99,37 @@ async def predict(items: Audio):
         decoded_data = requests.get(items.file).content
 
     load_model(model_type="long", hotword=items.hotword)
-    rec_result = loaded_model["model"](audio_in=decoded_data)
     result = []
-    log.info(rec_result)
-    for sentence in rec_result["sentences"]:
+    try:
+        rec_result = loaded_model["model"](audio_in=decoded_data)
+        log.info(rec_result)
+    except:
         result.append(
             {
-                "text": sentence["text"],
-                "start": sentence["start"] / 1000.0,
-                "end": sentence["end"] / 1000.0
+                "text": "",
+                "start": 0.0,
+                "end": 0.0
             }
         )
+        log.info("pass small file")
+    try:
+        for sentence in rec_result["sentences"]:
+            result.append(
+                {
+                    "text": sentence["text"],
+                    "start": sentence["start"] / 1000.0,
+                    "end": sentence["end"] / 1000.0
+                }
+            )
+    except:
+        result.append(
+            {
+                "text": "",
+                "start": 0.0,
+                "end": 0.0
+            }
+        )
+        log.info("mute file")
     log.info(result)
     return result
 
@@ -125,7 +145,7 @@ async def health_check():
 @app.get("/health/inference")
 async def health_check():
     try:
-        load_model(model_type="normal", hotword=None)
+        load_model(model_type="long", hotword=None)
         rec_result = loaded_model["model"](audio_in="./16000_001.wav")
         log.info("health 200")
         return status.HTTP_200_OK
